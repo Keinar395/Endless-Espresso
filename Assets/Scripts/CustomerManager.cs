@@ -61,6 +61,22 @@ public class CustomerManager : MonoBehaviour
         return waitingCustomers.Count > 0 && waitingCustomers[0].isAtCounter;
     }
 
+    public Customer GetFirstCustomer()
+    {
+        if (waitingCustomers.Count > 0)
+            return waitingCustomers[0];
+        return null;
+    }
+
+    public void ServeSpecificCustomer(Customer customerToServe)
+    {
+        if (waitingCustomers.Contains(customerToServe))
+        {
+            customerToServe.GoToExit(exitPoint);
+            waitingCustomers.Remove(customerToServe);
+        }
+    }
+
     // Çalışanın, sıradaki müşterinin nerede durduğunu öğrenmesi için yeni fonksiyon
     public Vector3 GetFirstCustomerPosition()
     {

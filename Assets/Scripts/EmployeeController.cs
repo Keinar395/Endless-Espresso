@@ -27,6 +27,9 @@ public class EmployeeController : MonoBehaviour
     public float orderTakeTime = 2f;
     public float brewTime = 3f;
 
+    [Header("Current Task")]
+    private Customer assignedCustomer;
+
     private float timer = 0f;
 
     void Start()
@@ -39,13 +42,18 @@ public class EmployeeController : MonoBehaviour
         switch (currentState)
         {
             case EmployeeState.Idle:
+                // Müşteri hazır mı diye bak
                 if (CustomerManager.Instance.IsCustomerReadyToOrder())
                 {
-                    currentState = EmployeeState.MovingToCustomer; // Müşteri hazırsa işe başla
+                    // Sıradaki müşteriyi "rezerve" et ve değişkene ata
+                    assignedCustomer = CustomerManager.Instance.GetFirstCustomer();
+                    currentState = EmployeeState.MovingToCustomer;
                 }
                 break;
+                
             case EmployeeState.MovingToCustomer:
-                MoveToTarget(CustomerManager.Instance.GetFirstCustomerPosition(), EmployeeState.TakingOrder);
+                // DÜZELTME 1: Artık rezerve ettiğimiz müşterinin direkt kendi pozisyonuna gidiyoruz
+                MoveToTarget(assignedCustomer.transform.position, EmployeeState.TakingOrder);
                 break;
                 
             case EmployeeState.TakingOrder:
@@ -57,13 +65,14 @@ public class EmployeeController : MonoBehaviour
                 break;
                 
             case EmployeeState.BrewingCoffee:
-                // Kahve bitince parayı hemen vermiyoruz, teslimata geçiyoruz
+                // Kahve bitince teslimata geçiyoruz
                 ProcessTask(brewTime, EmployeeState.MovingToDeliver);
                 break;
 
             case EmployeeState.MovingToDeliver:
-                // Tekrar müşteri noktasına gidiyoruz
-                MoveToTarget(customerPoint.position, EmployeeState.TakingOrder);
+                // DÜZELTME 2: Eski sabit 'customerPoint' yerine rezerve ettiğimiz müşteriye gidiyoruz.
+                // DÜZELTME 3: İşi bitince 'TakingOrder' değil, 'Idle' (boşta bekleme) durumuna geçmesini söylüyoruz.
+                MoveToTarget(assignedCustomer.transform.position, EmployeeState.Idle);
                 break;
         }
     }
@@ -90,11 +99,12 @@ public class EmployeeController : MonoBehaviour
             {
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
                 
-                // YENİ: Müşteriyi gönder ve tekrar beklemeye (Idle) geç
-                CustomerManager.Instance.ServeCustomer(); 
+                // Müşteri yöneticisine "bu spesifik müşteriyi" gönder diyoruz
+                CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
                 
+                assignedCustomer = null; // İş bitti, hafızayı boşalt
                 timer = 0f;
-                currentState = EmployeeState.Idle; 
+                currentState = nextState;
             }
         }
         else if (currentState == EmployeeState.MovingToCustomer)
