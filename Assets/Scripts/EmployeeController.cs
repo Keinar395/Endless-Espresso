@@ -4,11 +4,12 @@ public class EmployeeController : MonoBehaviour
 {
     public enum EmployeeState
     {
-        MovingToCustomer, // İlk siparişi almaya giderken
-        TakingOrder,      // Sipariş alma süreci
-        MovingToMachine,  // Makineye giderken
-        BrewingCoffee,    // Kahve yapma süreci
-        MovingToDeliver   // Kahveyi müşteriye geri götürürken (Yeni Durum)
+        Idle, // YENİ: Boşta bekleme durumu
+        MovingToCustomer,
+        TakingOrder,
+        MovingToMachine,
+        BrewingCoffee,
+        MovingToDeliver
     }
 
     [Header("State")]
@@ -30,15 +31,21 @@ public class EmployeeController : MonoBehaviour
 
     void Start()
     {
-        currentState = EmployeeState.MovingToCustomer;
+        currentState = EmployeeState.Idle; // Artık oyun başladığında bekliyor
     }
 
     void Update()
     {
         switch (currentState)
         {
+            case EmployeeState.Idle:
+                if (CustomerManager.Instance.IsCustomerReadyToOrder())
+                {
+                    currentState = EmployeeState.MovingToCustomer; // Müşteri hazırsa işe başla
+                }
+                break;
             case EmployeeState.MovingToCustomer:
-                MoveToTarget(customerPoint.position, EmployeeState.TakingOrder);
+                MoveToTarget(CustomerManager.Instance.GetFirstCustomerPosition(), EmployeeState.TakingOrder);
                 break;
                 
             case EmployeeState.TakingOrder:
@@ -79,12 +86,15 @@ public class EmployeeController : MonoBehaviour
 
         if (currentState == EmployeeState.MovingToDeliver)
         {
-            // Kahveyi teslim ettiğimiz an parayı kazanıyoruz
             if (distance < 2f)
             {
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
+                
+                // YENİ: Müşteriyi gönder ve tekrar beklemeye (Idle) geç
+                CustomerManager.Instance.ServeCustomer(); 
+                
                 timer = 0f;
-                currentState = nextState; // Tekrar TakingOrder'a döner
+                currentState = EmployeeState.Idle; 
             }
         }
         else if (currentState == EmployeeState.MovingToCustomer)
