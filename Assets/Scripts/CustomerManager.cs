@@ -57,14 +57,24 @@ public class CustomerManager : MonoBehaviour
 
     public bool IsCustomerReadyToOrder()
     {
-        // Listede en az 1 müşteri varsa VE sıradaki ilk müşteri tezgahtaki yerine ulaştıysa
-        return waitingCustomers.Count > 0 && waitingCustomers[0].isAtCounter;
+        // Listeyi gez: Tezgahta olan VE henüz hizmet edilmeyen biri var mı?
+        foreach (Customer c in waitingCustomers)
+        {
+            if (c.isAtCounter && !c.isBeingServed)
+                return true;
+        }
+        return false;
     }
 
-    public Customer GetFirstCustomer()
+    // Eski GetFirstCustomer() fonksiyonunun adını ve içini değiştiriyoruz
+    public Customer GetAvailableCustomer()
     {
-        if (waitingCustomers.Count > 0)
-            return waitingCustomers[0];
+        // Tezgahta bekleyen ve kimsenin ilgilenmediği ilk müşteriyi bul ve gönder
+        foreach (Customer c in waitingCustomers)
+        {
+            if (c.isAtCounter && !c.isBeingServed)
+                return c;
+        }
         return null;
     }
 

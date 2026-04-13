@@ -2,12 +2,14 @@ using UnityEngine;
 
 public class Customer : MonoBehaviour
 {
-    // Artık Transform değil, direkt olarak gideceği koordinatı tutuyoruz
     public Vector3 targetPosition; 
     public float speed = 4f;
     public bool isAtCounter = false;
+    
+    // YENİ EKLENEN DEĞİŞKEN: Başka bir çalışan bu müşteriyi aldı mı?
+    public bool isBeingServed = false; 
+    
     private bool isGoingToExit = false;
-
     void Update()
     {
         // Hedef koordinata yürü

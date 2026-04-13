@@ -17,15 +17,34 @@ public class EmployeeController : MonoBehaviour
 
     [Header("References")]
     public Transform customerPoint;
-    public Transform machinePoint;
+    private Transform currentTargetMachine;
 
-    [Header("Movement Stats")]
-    public float moveSpeed = 5f;
-    public float rotationSpeed = 720f;
+    [Header("Current Stats (Anlık Değişenler)")]
+    public float moveSpeed; // Bunu sildiğimiz için hata veriyordu, geri ekledik
+    public float orderTakeTime;
+    public float brewTime;
 
-    [Header("Work Stats")]
-    public float orderTakeTime = 2f;
-    public float brewTime = 3f;
+    [Header("Base Stats (Sabit Temel Değerler)")]
+    public float baseMoveSpeed = 5f;
+    public float baseOrderTime = 2f;
+    public float baseBrewTime = 3f;
+    public float rotationSpeed = 360f; // Derece/saniye cinsinden rotasyon hızı
+
+    void Awake()
+    {
+        // Oyun başladığında anlık süreleri temel sürelere eşitliyoruz
+        moveSpeed = baseMoveSpeed;
+        orderTakeTime = baseOrderTime;
+        brewTime = baseBrewTime;
+    }
+
+    // Bir önceki adımda yazdığımız bu fonksiyon aynen kalıyor
+    public void UpdateWorkStats(float multiplier)
+    {
+        moveSpeed = baseMoveSpeed * multiplier;
+        orderTakeTime = baseOrderTime / multiplier;
+        brewTime = baseBrewTime / multiplier;
+    }
 
     [Header("Current Task")]
     private Customer assignedCustomer;
@@ -42,36 +61,48 @@ public class EmployeeController : MonoBehaviour
         switch (currentState)
         {
             case EmployeeState.Idle:
-                // Müşteri hazır mı diye bak
-                if (CustomerManager.Instance.IsCustomerReadyToOrder())
-                {
-                    // Sıradaki müşteriyi "rezerve" et ve değişkene ata
-                    assignedCustomer = CustomerManager.Instance.GetFirstCustomer();
-                    currentState = EmployeeState.MovingToCustomer;
-                }
-                break;
+        if (CustomerManager.Instance.IsCustomerReadyToOrder())
+        {
+            // Eski 'GetFirstCustomer' yerine yeni yazdığımız fonksiyonu çağırıyoruz
+            assignedCustomer = CustomerManager.Instance.GetAvailableCustomer();
+            
+            // Eğer boşta bir müşteri bulabildiysek
+            if (assignedCustomer != null)
+            {
+                // DİĞER ÇALIŞANLAR ALMASIN DİYE MÜŞTERİYİ KENDİMİZE MÜHÜRLÜYORUZ
+                assignedCustomer.isBeingServed = true; 
+                
+                currentState = EmployeeState.MovingToCustomer;
+            }
+        }
+        break;
                 
             case EmployeeState.MovingToCustomer:
-                // DÜZELTME 1: Artık rezerve ettiğimiz müşterinin direkt kendi pozisyonuna gidiyoruz
                 MoveToTarget(assignedCustomer.transform.position, EmployeeState.TakingOrder);
                 break;
                 
             case EmployeeState.TakingOrder:
-                ProcessTask(orderTakeTime, EmployeeState.MovingToMachine);
+                // Siparişi alma süreci bittiğinde makineye gitmeden önce bir makine seç!
+                timer += Time.deltaTime;
+                if (timer >= orderTakeTime)
+                {
+                    timer = 0f;
+                    // YENİ EKLENEN KISIM: Yöneticiden rastgele bir makine iste
+                    currentTargetMachine = UpgradeManager.Instance.GetRandomMachine();
+                    currentState = EmployeeState.MovingToMachine;
+                }
                 break;
                 
             case EmployeeState.MovingToMachine:
-                MoveToTarget(machinePoint.position, EmployeeState.BrewingCoffee);
+                // Artık sabit makineye değil, kendi seçtiği makineye gidiyor
+                MoveToTarget(currentTargetMachine.position, EmployeeState.BrewingCoffee);
                 break;
                 
             case EmployeeState.BrewingCoffee:
-                // Kahve bitince teslimata geçiyoruz
                 ProcessTask(brewTime, EmployeeState.MovingToDeliver);
                 break;
 
             case EmployeeState.MovingToDeliver:
-                // DÜZELTME 2: Eski sabit 'customerPoint' yerine rezerve ettiğimiz müşteriye gidiyoruz.
-                // DÜZELTME 3: İşi bitince 'TakingOrder' değil, 'Idle' (boşta bekleme) durumuna geçmesini söylüyoruz.
                 MoveToTarget(assignedCustomer.transform.position, EmployeeState.Idle);
                 break;
         }
@@ -134,4 +165,5 @@ public class EmployeeController : MonoBehaviour
             currentState = nextState;
         }
     }
+
 }

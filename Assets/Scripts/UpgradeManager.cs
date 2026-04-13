@@ -7,28 +7,36 @@ public class UpgradeManager : MonoBehaviour
     public static UpgradeManager Instance;
 
     [Header("Global Employee Stats")]
-    public float currentGlobalMoveSpeed = 5f; // Dükkandaki herkesin ortak hızı
-    public List<EmployeeController> activeEmployees = new List<EmployeeController>(); // Sahnedeki tüm çalışanlar
+    public float currentGlobalMoveSpeed = 5f; 
+    public List<EmployeeController> activeEmployees = new List<EmployeeController>(); 
     
     [Header("Hire Employee Upgrade")]
     public double hireCost = 50;
     public float hireCostMultiplier = 2.5f;
     public TextMeshProUGUI hireCostText;
     public GameObject employeePrefab;
-    public Transform employeeSpawnPoint; // Yeni işçilerin doğacağı yer
+    public Transform employeeSpawnPoint; 
 
     [Header("Move Speed Upgrade")]
     public double moveSpeedCost = 15;
-    public float moveSpeedIncrease = 1f;
     public float moveSpeedCostMultiplier = 1.5f;
     public TextMeshProUGUI moveSpeedCostText;
+    public float globalSpeedMultiplier = 1f; 
+    public float speedStep = 0.1f; // Her tıkta hızı %10 artırır
+
+    [Header("Machine Upgrade (Yatay Genişleme)")]
+    public double machineCost = 30; // Makine alma bedeli
+    public float machineCostMultiplier = 1.8f;
+    public TextMeshProUGUI machineCostText;
+    public GameObject machinePrefab; // Makinenin kendisi (Kare)
+    public List<Transform> activeMachines = new List<Transform>(); // Sahnede var olan tüm makineler
+    [Tooltip("Yeni makine eskisinin ne kadar uzağına yerleşecek?")]
+    public float machineSpacingOffset = 1f; // X ekseninde sağa doğru kayma miktarı
 
     [Header("Evolution (Dark Shift) System")]
-    public int currentProductTier = 0; // Şu an hangi üründeyiz? (0 = Kahve)
-    public TextMeshProUGUI productNameText; // Ekranda sattığımız ürünün adını göstermek için
+    public int currentProductTier = 0; 
+    public TextMeshProUGUI productNameText; 
     public TextMeshProUGUI evolutionCostText;
-    
-    // Ürünlerin listesi (Inspector'dan doldurulacak)
     public ProductTier[] productTiers; 
 
     void Awake()
@@ -38,15 +46,13 @@ public class UpgradeManager : MonoBehaviour
 
     void Start()
     {
-        // Oyundaki ilk elemanı (sahnedekini) listeye ekle ve hızını ayarla
         EmployeeController firstEmp = Object.FindFirstObjectByType<EmployeeController>();
         if (firstEmp != null)
         {
             activeEmployees.Add(firstEmp);
-            firstEmp.moveSpeed = currentGlobalMoveSpeed;
+            firstEmp.UpdateWorkStats(globalSpeedMultiplier); // DOĞRUSU BU
         }
 
-        // Oyun başladığında ilk ürünün fiyatını MoneyManager'a aktar
         if (productTiers.Length > 0)
         {
             MoneyManager.Instance.coffeePrice = productTiers[0].basePrice;
@@ -55,87 +61,101 @@ public class UpgradeManager : MonoBehaviour
         UpdateUI();
     }
 
-    // 1. ELEMAN İŞE ALMA FONKSİYONU
+    // --- YENİ EKLENEN MAKİNE SATIN ALMA FONKSİYONU ---
+    public void BuyNewMachine()
+    {
+        if (MoneyManager.Instance.SpendMoney(machineCost))
+        {
+            // Listedeki en son makinenin pozisyonunu al
+            Transform lastMachine = activeMachines[activeMachines.Count - 1];
+            
+            // Yeni makinenin pozisyonunu belirle (Eskisinin biraz sağına veya üstüne)
+            // Eğer dükkanın yukarıdan aşağıyasa Vector3(0, offset, 0) yapabilirsin.
+            Vector3 newPosition = lastMachine.position + new Vector3(machineSpacingOffset, 0, 0);
+
+            // Yeni makineyi yarat
+            GameObject newMachine = Instantiate(machinePrefab, newPosition, Quaternion.identity);
+            
+            // Listeye ekle
+            activeMachines.Add(newMachine.transform);
+
+            // Fiyatı güncelle
+            machineCost = System.Math.Round(machineCost * machineCostMultiplier);
+            UpdateUI();
+
+            Debug.Log("Yeni makine alındı! Toplam makine: " + activeMachines.Count);
+        }
+    }
+
+    // Çalışanların boş bir makine bulması için kullanılacak fonksiyon
+    public Transform GetRandomMachine()
+    {
+        // Aktif makineler listesinden rastgele bir makine seç
+        int randomIndex = Random.Range(0, activeMachines.Count);
+        return activeMachines[randomIndex];
+    }
+
+    // (Eski Fonksiyonlar Aynen Kalıyor)
     public void HireEmployee()
     {
         if (MoneyManager.Instance.SpendMoney(hireCost))
         {
-            // Yeni çalışanı yarat
             GameObject newEmp = Instantiate(employeePrefab, employeeSpawnPoint.position, Quaternion.identity);
             EmployeeController empScript = newEmp.GetComponent<EmployeeController>();
-            
-            // Yeni çalışanın hızını güncel global hıza eşitle ki yavaş kalmasın
-            empScript.moveSpeed = currentGlobalMoveSpeed;
-            
-            // Listeye ekle
+            // Yeni çalışan doğduğunda anında güncel hız çarpanını alsın
+            empScript.UpdateWorkStats(globalSpeedMultiplier); // DOĞRUSU BU
             activeEmployees.Add(empScript);
-
-            // Maliyeti artır ve UI güncelle
             hireCost = System.Math.Round(hireCost * hireCostMultiplier);
             UpdateUI();
-            
-            Debug.Log("Yeni eleman işe alındı! Toplam eleman: " + activeEmployees.Count);
         }
     }
 
-    // 2. HIZ ARTIRMA FONKSİYONU (Sınırsız)
     public void UpgradeMoveSpeed()
+{
+    if (MoneyManager.Instance.SpendMoney(moveSpeedCost))
     {
-        if (MoneyManager.Instance.SpendMoney(moveSpeedCost))
+        // Çarpanı artır (Örn: 1.0 -> 1.1 -> 1.2)
+        globalSpeedMultiplier += speedStep;
+
+        // Tüm çalışanlara yeni hızı ve süreleri güncellemesini söyle
+        foreach (EmployeeController emp in activeEmployees)
         {
-            // Global hızı artır
-            currentGlobalMoveSpeed += moveSpeedIncrease;
-
-            // Sahnedeki TÜM çalışanların hızını anında güncelle
-            foreach (EmployeeController emp in activeEmployees)
-            {
-                emp.moveSpeed = currentGlobalMoveSpeed;
-            }
-
-            moveSpeedCost = System.Math.Round(moveSpeedCost * moveSpeedCostMultiplier);
-            UpdateUI();
+            emp.UpdateWorkStats(globalSpeedMultiplier);
         }
-    }
 
-    // 3. EVRİM / ÇAĞ ATLAMA FONKSİYONU
+        moveSpeedCost = System.Math.Round(moveSpeedCost * moveSpeedCostMultiplier);
+        UpdateUI();
+    }
+}
+
     public void EvolveProduct()
     {
-        // Eğer hala evrimleşebileceğimiz bir ürün varsa
         if (currentProductTier < productTiers.Length - 1)
         {
             double cost = productTiers[currentProductTier].evolutionCost;
-
             if (MoneyManager.Instance.SpendMoney(cost))
             {
-                currentProductTier++; // Bir sonraki karanlık ürüne geç
-                
-                // Yeni ürünün devasa satış fiyatını MoneyManager'a bildir
+                currentProductTier++; 
                 MoneyManager.Instance.coffeePrice = productTiers[currentProductTier].basePrice;
-                
                 UpdateUI();
-
                 Debug.Log("DÜKKAN EVRİM GEÇİRDİ! Yeni Ürün: " + productTiers[currentProductTier].productName);
-                
-                // İLERİSİ İÇİN NOT: Burada tüm dükkanın rengini, makinelerin sprite'larını 
-                // değiştirecek bir "DarkShiftEvent" tetikleyebilirsin.
             }
         }
     }
 
     private void UpdateUI()
     {
-        if (moveSpeedCostText != null) moveSpeedCostText.text = "$" + moveSpeedCost.ToString("F0");
-        if (hireCostText != null) hireCostText.text = "$" + hireCost.ToString("F0");
+        if (moveSpeedCostText != null) moveSpeedCostText.text ="Increase Speed:" + "$" + moveSpeedCost.ToString("F0");
+        if (hireCostText != null) hireCostText.text ="Hire Employee:" + "$" + hireCost.ToString("F0");
+        if (machineCostText != null) machineCostText.text = "Buy Machine:" + "$" + machineCost.ToString("F0"); // Yeni eklendi
 
-        // Evrim UI Güncellemesi
         if (productTiers.Length > 0 && currentProductTier < productTiers.Length)
         {
             if (productNameText != null) 
-                productNameText.text = "Satılan: " + productTiers[currentProductTier].productName;
+                productNameText.text = productTiers[currentProductTier].productName;
 
             if (evolutionCostText != null)
             {
-                // Eğer son üründeysek (Oyunun sonu/Maksimum seviye)
                 if (currentProductTier >= productTiers.Length - 1)
                     evolutionCostText.text = "MAX";
                 else
@@ -143,13 +163,18 @@ public class UpgradeManager : MonoBehaviour
             }
         }
     }
+
+    public void CheatAddMoney()
+    {
+        MoneyManager.Instance.AddMoney(10000f);
+        UpdateUI();
+    }
 }
 
-// Ürünlerin özelliklerini Inspector'da liste halinde görebilmemizi sağlayan yapı
 [System.Serializable]
 public struct ProductTier
 {
-    public string productName; // Ürünün Adı (Örn: "Espresso", "Kanlı Smoothie")
-    public double basePrice;   // Bu ürünün müşteriye satış fiyatı
-    public double evolutionCost; // BU ÜRÜNDEN bir sonrakine geçmek için gereken devasa para
+    public string productName; 
+    public double basePrice;   
+    public double evolutionCost; 
 }
