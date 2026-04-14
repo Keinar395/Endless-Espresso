@@ -16,7 +16,7 @@ public class Customer : MonoBehaviour
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
 
         // Hedefe ulaşıldıysa
-        if (Vector2.Distance(transform.position, targetPosition) < 0.01f)
+        if (Vector2.Distance(transform.position, targetPosition) < 0.1f)
         {
             if (!isGoingToExit)
             {
