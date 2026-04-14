@@ -29,7 +29,7 @@ public class UpgradeManager : MonoBehaviour
     public float machineCostMultiplier = 1.8f;
     public TextMeshProUGUI machineCostText;
     public GameObject machinePrefab; // Makinenin kendisi (Kare)
-    public List<Transform> activeMachines = new List<Transform>(); // Sahnede var olan tüm makineler
+   public List<Machine> activeMachines = new List<Machine>(); // Sahnede var olan tüm makineler
     [Tooltip("Yeni makine eskisinin ne kadar uzağına yerleşecek?")]
     public float machineSpacingOffset = 1f; // X ekseninde sağa doğru kayma miktarı
 
@@ -66,20 +66,18 @@ public class UpgradeManager : MonoBehaviour
     {
         if (MoneyManager.Instance.SpendMoney(machineCost))
         {
-            // Listedeki en son makinenin pozisyonunu al
-            Transform lastMachine = activeMachines[activeMachines.Count - 1];
+            // DÜZELTME 1: Artık listedeki eleman Transform değil, Machine tipinde
+            Machine lastMachine = activeMachines[activeMachines.Count - 1];
             
-            // Yeni makinenin pozisyonunu belirle (Eskisinin biraz sağına veya üstüne)
-            // Eğer dükkanın yukarıdan aşağıyasa Vector3(0, offset, 0) yapabilirsin.
-            Vector3 newPosition = lastMachine.position + new Vector3(machineSpacingOffset, 0, 0);
+            // lastMachine.transform.position diyerek pozisyonunu alıyoruz
+            Vector3 newPosition = lastMachine.transform.position + new Vector3(machineSpacingOffset, 0, 0);
 
-            // Yeni makineyi yarat
             GameObject newMachine = Instantiate(machinePrefab, newPosition, Quaternion.identity);
             
-            // Listeye ekle
-            activeMachines.Add(newMachine.transform);
+            // DÜZELTME 2: GameObject'i direkt listeye atamayız. 
+            // İçindeki "Machine" scriptini alıp listeye ekliyoruz.
+            activeMachines.Add(newMachine.GetComponent<Machine>());
 
-            // Fiyatı güncelle
             machineCost = System.Math.Round(machineCost * machineCostMultiplier);
             UpdateUI();
 
@@ -88,12 +86,14 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Çalışanların boş bir makine bulması için kullanılacak fonksiyon
-    public Transform GetRandomMachine()
+    public Machine GetAvailableMachine()
+{
+    foreach (Machine m in activeMachines)
     {
-        // Aktif makineler listesinden rastgele bir makine seç
-        int randomIndex = Random.Range(0, activeMachines.Count);
-        return activeMachines[randomIndex];
+        if (!m.isOccupied) return m;
     }
+    return null; // Tüm makineler doluysa null döner
+}
 
     // (Eski Fonksiyonlar Aynen Kalıyor)
     public void HireEmployee()
@@ -166,7 +166,7 @@ public class UpgradeManager : MonoBehaviour
 
     public void CheatAddMoney()
     {
-        MoneyManager.Instance.AddMoney(10000f);
+        MoneyManager.Instance.AddMoney(1000000f);
         UpdateUI();
     }
 }

@@ -4,7 +4,7 @@ public class EmployeeController : MonoBehaviour
 {
     public enum EmployeeState
     {
-        Idle, // YENİ: Boşta bekleme durumu
+        Idle,
         MovingToCustomer,
         TakingOrder,
         MovingToMachine,
@@ -15,30 +15,37 @@ public class EmployeeController : MonoBehaviour
     [Header("State")]
     public EmployeeState currentState;
 
-    [Header("References")]
-    public Transform customerPoint;
-    private Transform currentTargetMachine;
-
     [Header("Current Stats (Anlık Değişenler)")]
-    public float moveSpeed; // Bunu sildiğimiz için hata veriyordu, geri ekledik
+    public float moveSpeed;
     public float orderTakeTime;
     public float brewTime;
+    public float rotationSpeed = 720f;
 
     [Header("Base Stats (Sabit Temel Değerler)")]
     public float baseMoveSpeed = 5f;
-    public float baseOrderTime = 2f;
-    public float baseBrewTime = 3f;
-    public float rotationSpeed = 360f; // Derece/saniye cinsinden rotasyon hızı
+    public float baseOrderTime = 1f;
+    public float baseBrewTime = 2f;
+
+    [Header("Current Task")]
+    private Customer assignedCustomer;
+    private Machine currentMachine;
+
+    private float timer = 0f;
 
     void Awake()
     {
-        // Oyun başladığında anlık süreleri temel sürelere eşitliyoruz
+        // Başlangıçta hızları temele eşitliyoruz
         moveSpeed = baseMoveSpeed;
         orderTakeTime = baseOrderTime;
         brewTime = baseBrewTime;
     }
 
-    // Bir önceki adımda yazdığımız bu fonksiyon aynen kalıyor
+    void Start()
+    {
+        currentState = EmployeeState.Idle;
+    }
+
+    // UpgradeManager tarafından hızlandırıldığımızda çağrılır
     public void UpdateWorkStats(float multiplier)
     {
         moveSpeed = baseMoveSpeed * multiplier;
@@ -46,63 +53,75 @@ public class EmployeeController : MonoBehaviour
         brewTime = baseBrewTime / multiplier;
     }
 
-    [Header("Current Task")]
-    private Customer assignedCustomer;
-
-    private float timer = 0f;
-
-    void Start()
-    {
-        currentState = EmployeeState.Idle; // Artık oyun başladığında bekliyor
-    }
-
     void Update()
+{
+    // GÜVENLİK: Eğer atanmış müşteri bir şekilde yok olursa (Sahneden silinirse vb.)
+    if (currentState != EmployeeState.Idle && assignedCustomer == null)
     {
+        // Elinde kilitlediği bir makine varsa serbest bırak
+        if (currentMachine != null) currentMachine.isOccupied = false;
+        
+        currentState = EmployeeState.Idle;
+        timer = 0f;
+        return;
+    }
         switch (currentState)
         {
             case EmployeeState.Idle:
-        if (CustomerManager.Instance.IsCustomerReadyToOrder())
-        {
-            // Eski 'GetFirstCustomer' yerine yeni yazdığımız fonksiyonu çağırıyoruz
-            assignedCustomer = CustomerManager.Instance.GetAvailableCustomer();
-            
-            // Eğer boşta bir müşteri bulabildiysek
-            if (assignedCustomer != null)
-            {
-                // DİĞER ÇALIŞANLAR ALMASIN DİYE MÜŞTERİYİ KENDİMİZE MÜHÜRLÜYORUZ
-                assignedCustomer.isBeingServed = true; 
-                
-                currentState = EmployeeState.MovingToCustomer;
-            }
-        }
-        break;
-                
-            case EmployeeState.MovingToCustomer:
-                MoveToTarget(assignedCustomer.transform.position, EmployeeState.TakingOrder);
-                break;
-                
-            case EmployeeState.TakingOrder:
-                // Siparişi alma süreci bittiğinde makineye gitmeden önce bir makine seç!
-                timer += Time.deltaTime;
-                if (timer >= orderTakeTime)
+                Customer potentialCustomer = CustomerManager.Instance.TryGetAvailableCustomer();
+    
+                if (potentialCustomer != null)
                 {
-                    timer = 0f;
-                    // YENİ EKLENEN KISIM: Yöneticiden rastgele bir makine iste
-                    currentTargetMachine = UpgradeManager.Instance.GetRandomMachine();
-                    currentState = EmployeeState.MovingToMachine;
+                    assignedCustomer = potentialCustomer;
+                    assignedCustomer.isBeingServed = true; // Hemen mühürle
+                    currentState = EmployeeState.MovingToCustomer;
                 }
                 break;
-                
-            case EmployeeState.MovingToMachine:
-                // Artık sabit makineye değil, kendi seçtiği makineye gidiyor
-                MoveToTarget(currentTargetMachine.position, EmployeeState.BrewingCoffee);
+
+            case EmployeeState.MovingToCustomer:
+                // SİLİNEN KISIM BURASIYDI: Müşteriye git
+                MoveToTarget(assignedCustomer.transform.position, EmployeeState.TakingOrder);
                 break;
-                
+
+            case EmployeeState.TakingOrder:
+                timer += Time.deltaTime;
+                // Sipariş alma süresi dolduysa
+                if (timer >= orderTakeTime)
+                {
+                    // Boş makine bulmaya çalış
+                    currentMachine = UpgradeManager.Instance.GetAvailableMachine();
+                    
+                    if (currentMachine != null)
+                    {
+                        currentMachine.isOccupied = true; // Makineyi rezerve et
+                        
+                        // DÜZELTME BURADA: Timer'ı SADECE makine bulursak sıfırlıyoruz!
+                        timer = 0f; 
+                        
+                        currentState = EmployeeState.MovingToMachine;
+                    }
+                    // Eğer makine bulamazsa timer sıfırlanmaz! 
+                    // Yani siparişi çoktan aldığı için bir sonraki frame'de beklemeden tekrar makine sorar.
+                }
+                break;
+
+            case EmployeeState.MovingToMachine:
+                MoveToTarget(currentMachine.transform.position, EmployeeState.BrewingCoffee);
+                break;
+
             case EmployeeState.BrewingCoffee:
-                ProcessTask(brewTime, EmployeeState.MovingToDeliver);
+                timer += Time.deltaTime;
+                if (timer >= brewTime)
+                {
+                    timer = 0f;
+                    if (currentMachine != null) currentMachine.isOccupied = false;
+                    currentMachine = null;
+                    currentState = EmployeeState.MovingToDeliver;
+                }
                 break;
 
             case EmployeeState.MovingToDeliver:
+                // SİLİNEN KISIM 2: Kahveyi teslim et
                 MoveToTarget(assignedCustomer.transform.position, EmployeeState.Idle);
                 break;
         }
@@ -110,7 +129,7 @@ public class EmployeeController : MonoBehaviour
 
     private void MoveToTarget(Vector3 target, EmployeeState nextState)
     {
-        // Rotasyon Mantığı
+        // --- Rotasyon Mantığı ---
         Vector2 direction = target - transform.position;
         if (direction.sqrMagnitude > 0.001f)
         {
@@ -118,10 +137,10 @@ public class EmployeeController : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0, 0, angle - 90f), rotationSpeed * Time.deltaTime);
         }
 
-        // Hareket Mantığı
+        // --- Hareket Mantığı ---
         transform.position = Vector2.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
 
-        // Mesafe Kontrolleri (Senin mantığınla güncellendi)
+        // --- Mesafe ve Varış Kontrolleri ---
         float distance = Vector2.Distance(transform.position, target);
 
         if (currentState == EmployeeState.MovingToDeliver)
@@ -129,11 +148,8 @@ public class EmployeeController : MonoBehaviour
             if (distance < 2f)
             {
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
-                
-                // Müşteri yöneticisine "bu spesifik müşteriyi" gönder diyoruz
                 CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
-                
-                assignedCustomer = null; // İş bitti, hafızayı boşalt
+                assignedCustomer = null; // İş bitti, müşteri referansını sil
                 timer = 0f;
                 currentState = nextState;
             }
@@ -155,15 +171,4 @@ public class EmployeeController : MonoBehaviour
             }
         }
     }
-
-    private void ProcessTask(float duration, EmployeeState nextState)
-    {
-        timer += Time.deltaTime;
-        if (timer >= duration)
-        {
-            timer = 0f;
-            currentState = nextState;
-        }
-    }
-
 }

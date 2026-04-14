@@ -67,16 +67,17 @@ public class CustomerManager : MonoBehaviour
     }
 
     // Eski GetFirstCustomer() fonksiyonunun adını ve içini değiştiriyoruz
-    public Customer GetAvailableCustomer()
+    public Customer TryGetAvailableCustomer()
     {
-        // Tezgahta bekleyen ve kimsenin ilgilenmediği ilk müşteriyi bul ve gönder
         foreach (Customer c in waitingCustomers)
         {
             if (c.isAtCounter && !c.isBeingServed)
-                return c;
+            {
+                return c; // Bulduğumuz an geri gönderiyoruz
+            }
         }
-        return null;
-    }
+        return null; // Kimse yoksa null döner
+}
 
     public void ServeSpecificCustomer(Customer customerToServe)
     {
