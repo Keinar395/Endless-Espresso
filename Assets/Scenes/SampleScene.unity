@@ -2272,9 +2272,10 @@ MonoBehaviour:
   spawnPoint: {fileID: 685327832}
   counterPoint: {fileID: 995429208}
   exitPoint: {fileID: 1830435551}
-  spawnInterval: 1
+  baseSpawnInterval: 5
   maxCustomers: 25
   randomOffsetRange: 5
+  baseCustomerSpeed: 4
   waitingCustomers: []
 --- !u!114 &1901801414
 MonoBehaviour:
@@ -2290,7 +2291,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   currentGlobalMoveSpeed: 5
   activeEmployees: []
-  hireCost: 50
+  hireCost: 30
   hireCostMultiplier: 2.5
   hireCostText: {fileID: 1379778863}
   employeePrefab: {fileID: 7810840385419248484, guid: 5b1431f77d58f174fa67169a337b919e, type: 3}
@@ -2300,7 +2301,7 @@ MonoBehaviour:
   moveSpeedCostText: {fileID: 227605927}
   globalSpeedMultiplier: 1
   speedStep: 0.1
-  machineCost: 30
+  machineCost: 50
   machineCostMultiplier: 1.8
   machineCostText: {fileID: 1853706921}
   machinePrefab: {fileID: 748562318}

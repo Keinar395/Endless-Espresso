@@ -58,6 +58,8 @@ public class UpgradeManager : MonoBehaviour
             MoneyManager.Instance.coffeePrice = productTiers[0].basePrice;
         }
 
+        CustomerManager.Instance.UpdateCustomerFlow(globalSpeedMultiplier); 
+        
         UpdateUI();
     }
 
@@ -66,17 +68,19 @@ public class UpgradeManager : MonoBehaviour
     {
         if (MoneyManager.Instance.SpendMoney(machineCost))
         {
-            // DÜZELTME 1: Artık listedeki eleman Transform değil, Machine tipinde
             Machine lastMachine = activeMachines[activeMachines.Count - 1];
-            
-            // lastMachine.transform.position diyerek pozisyonunu alıyoruz
             Vector3 newPosition = lastMachine.transform.position + new Vector3(machineSpacingOffset, 0, 0);
 
+            // Makineyi kopyala
             GameObject newMachine = Instantiate(machinePrefab, newPosition, Quaternion.identity);
             
-            // DÜZELTME 2: GameObject'i direkt listeye atamayız. 
-            // İçindeki "Machine" scriptini alıp listeye ekliyoruz.
-            activeMachines.Add(newMachine.GetComponent<Machine>());
+            // KİLİT ÇÖZÜM NOKTASI BURASI:
+            Machine machineScript = newMachine.GetComponent<Machine>();
+            
+            // Makine kimden kopyalanmış olursa olsun, hayata kesinlikle BOŞ başlasın!
+            machineScript.isOccupied = false; 
+            
+            activeMachines.Add(machineScript);
 
             machineCost = System.Math.Round(machineCost * machineCostMultiplier);
             UpdateUI();
@@ -111,22 +115,23 @@ public class UpgradeManager : MonoBehaviour
     }
 
     public void UpgradeMoveSpeed()
-{
-    if (MoneyManager.Instance.SpendMoney(moveSpeedCost))
     {
-        // Çarpanı artır (Örn: 1.0 -> 1.1 -> 1.2)
-        globalSpeedMultiplier += speedStep;
-
-        // Tüm çalışanlara yeni hızı ve süreleri güncellemesini söyle
-        foreach (EmployeeController emp in activeEmployees)
+        if (MoneyManager.Instance.SpendMoney(moveSpeedCost))
         {
-            emp.UpdateWorkStats(globalSpeedMultiplier);
-        }
+            globalSpeedMultiplier += speedStep;
 
-        moveSpeedCost = System.Math.Round(moveSpeedCost * moveSpeedCostMultiplier);
-        UpdateUI();
+            foreach (EmployeeController emp in activeEmployees)
+            {
+                emp.UpdateWorkStats(globalSpeedMultiplier);
+            }
+            
+            // YENİ SATIR: Hız arttığında müşteri akışını da hızlandır
+            CustomerManager.Instance.UpdateCustomerFlow(globalSpeedMultiplier); 
+
+            moveSpeedCost = System.Math.Round(moveSpeedCost * moveSpeedCostMultiplier);
+            UpdateUI();
+        }
     }
-}
 
     public void EvolveProduct()
     {

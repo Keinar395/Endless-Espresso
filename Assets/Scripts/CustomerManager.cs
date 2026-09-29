@@ -8,35 +8,58 @@ public class CustomerManager : MonoBehaviour
     [Header("References")]
     public GameObject customerPrefab;
     public Transform spawnPoint;
-    public Transform counterPoint; // Tezgahın merkez noktası
+    public Transform counterPoint; 
     public Transform exitPoint;
 
     [Header("Spawning & Positioning")]
-    public float spawnInterval = 3f; // Kaç saniyede bir müşteri gelsin?
-    public int maxCustomers = 5;     // Tezgahta aynı anda en fazla kaç kişi bekleyebilir?
-    [Tooltip("Tezgahın merkezinden sağa ve sola ne kadar rastgele sapabileceği.")]
+    public float baseSpawnInterval = 3f; // Başlangıçtaki müşteri gelme süresi
+    private float currentSpawnInterval;  // O anki hızlandırılmış süre
+    public int maxCustomers = 5;         
     public float randomOffsetRange = 10f; 
+    
+    [Header("Customer Speed (Müşteri Hızı)")]
+    public float baseCustomerSpeed = 4f; // Müşterinin başlangıç yürüme hızı
+    private float currentCustomerSpeed;  // Hız çarpanına göre artan yürüme hızı
 
     private float timer = 0f;
 
-    // Bekleyen müşterileri sırayla tutacağımız liste
     public List<Customer> waitingCustomers = new List<Customer>();
 
     void Awake()
     {
         Instance = this;
+        // Oyun başlarken anlık değerleri temellere eşitle
+        currentSpawnInterval = baseSpawnInterval;
+        currentCustomerSpeed = baseCustomerSpeed;
     }
 
     void Update()
     {
         timer += Time.deltaTime;
         
-        // Yeterli süre geçtiyse ve dükkan tam dolu değilse yeni müşteri yarat
-        if (timer >= spawnInterval && waitingCustomers.Count < maxCustomers)
+        // Yeterli süre geçtiyse ve dükkan tam dolu değilse
+        if (timer >= currentSpawnInterval && waitingCustomers.Count < maxCustomers)
         {
             SpawnCustomer();
             timer = 0f;
         }
+    }
+
+    // UpgradeManager tarafından çağrılacak yeni fonksiyon!
+    public void UpdateCustomerFlow(float globalMultiplier)
+    {
+        // globalMultiplier oyun başında 1'dir.
+        // Hız arttıkça müşterilerin daha da "agresif" gelmesini istiyorsak, çarpanın gücünü artırabiliriz (Örn: 1.2 kuvvetini alarak)
+        // Böylece oyun başında çarpan 1 kalır (bozulmaz), ama sonlara doğru çok daha fazla müşteri üretir.
+        float spawnMultiplier = Mathf.Pow(globalMultiplier, 2f); 
+
+        currentSpawnInterval = baseSpawnInterval / spawnMultiplier;
+        
+        // KOD HATASININ ÇÖZÜMÜ: Alt sınır koyuyoruz. Müşteriler en fazla 0.15 saniyede bir gelebilsin (Oyun çökmesin diye)
+        currentSpawnInterval = Mathf.Max(currentSpawnInterval, 0.15f);
+
+        // Müşteri yürüme hızı normal çarpanla artsın (Oyun başında 5 ile ÇARPMIYORUZ ki tazı gibi koşmasınlar)
+        currentCustomerSpeed = baseCustomerSpeed * globalMultiplier;
     }
 
     void SpawnCustomer()
@@ -44,20 +67,17 @@ public class CustomerManager : MonoBehaviour
         GameObject go = Instantiate(customerPrefab, spawnPoint.position, Quaternion.identity);
         Customer newCustomer = go.GetComponent<Customer>();
         
-        // Tezgah düzleminde X ekseninde (sağa/sola) rastgele bir sapma yaratıyoruz.
-        // EĞER senin tezgahın yukarıdan aşağıya (Y ekseni) duruyorsa burayı (0, Random.Range, 0) yapmalısın.
-        Vector3 randomOffset = new Vector3(Random.Range(-randomOffsetRange, randomOffsetRange), 0, 0);
+        // YENİ: Müşterinin yürüme hızını dinamik hıza eşitle
+        newCustomer.speed = currentCustomerSpeed;
         
-        // Müşterinin gideceği yeri tezgahın merkezi + rastgele sapma olarak belirliyoruz
+        Vector3 randomOffset = new Vector3(Random.Range(-randomOffsetRange, randomOffsetRange), 0, 0);
         newCustomer.targetPosition = counterPoint.position + randomOffset;
         
-        // Müşteriyi listeye ekle
         waitingCustomers.Add(newCustomer);
     }
 
     public bool IsCustomerReadyToOrder()
     {
-        // Listeyi gez: Tezgahta olan VE henüz hizmet edilmeyen biri var mı?
         foreach (Customer c in waitingCustomers)
         {
             if (c.isAtCounter && !c.isBeingServed)
@@ -66,18 +86,17 @@ public class CustomerManager : MonoBehaviour
         return false;
     }
 
-    // Eski GetFirstCustomer() fonksiyonunun adını ve içini değiştiriyoruz
     public Customer TryGetAvailableCustomer()
     {
         foreach (Customer c in waitingCustomers)
         {
             if (c.isAtCounter && !c.isBeingServed)
             {
-                return c; // Bulduğumuz an geri gönderiyoruz
+                return c; 
             }
         }
-        return null; // Kimse yoksa null döner
-}
+        return null; 
+    }
 
     public void ServeSpecificCustomer(Customer customerToServe)
     {
@@ -85,22 +104,6 @@ public class CustomerManager : MonoBehaviour
         {
             customerToServe.GoToExit(exitPoint);
             waitingCustomers.Remove(customerToServe);
-        }
-    }
-
-    // Çalışanın, sıradaki müşterinin nerede durduğunu öğrenmesi için yeni fonksiyon
-    public Vector3 GetFirstCustomerPosition()
-    {
-        return waitingCustomers[0].transform.position;
-    }
-
-    public void ServeCustomer()
-    {
-        if (waitingCustomers.Count > 0)
-        {
-            Customer servedCustomer = waitingCustomers[0];
-            servedCustomer.GoToExit(exitPoint); // İşi biteni çıkışa yolla
-            waitingCustomers.RemoveAt(0);       // Listeden sil ki sıradaki müşteriye geçilsin
         }
     }
 }

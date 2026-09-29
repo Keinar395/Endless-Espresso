@@ -49,22 +49,28 @@ public class EmployeeController : MonoBehaviour
     public void UpdateWorkStats(float multiplier)
     {
         moveSpeed = baseMoveSpeed * multiplier;
-        orderTakeTime = baseOrderTime / multiplier;
-        brewTime = baseBrewTime / multiplier;
+        
+        // GÜVENLİK SINIRI: Süreler ne kadar kısalırsa kısalsın 0.05 saniyenin altına düşmesin (Bug olmaması için)
+        orderTakeTime = Mathf.Max(baseOrderTime / multiplier, 0.05f);
+        brewTime = Mathf.Max(baseBrewTime / multiplier, 0.05f);
+        
+        // BONUS: Yürüme hızı arttıkça, dönüş (yönelme) hızı da artsın ki robot gibi donuk kalmasınlar
+        rotationSpeed = 720f * multiplier; 
     }
 
     void Update()
-{
-    // GÜVENLİK: Eğer atanmış müşteri bir şekilde yok olursa (Sahneden silinirse vb.)
-    if (currentState != EmployeeState.Idle && assignedCustomer == null)
     {
-        // Elinde kilitlediği bir makine varsa serbest bırak
-        if (currentMachine != null) currentMachine.isOccupied = false;
-        
-        currentState = EmployeeState.Idle;
-        timer = 0f;
-        return;
-    }
+        // GÜVENLİK: Eğer atanmış müşteri bir şekilde yok olursa (Sahneden silinirse vb.)
+        if (currentState != EmployeeState.Idle && assignedCustomer == null)
+        {
+            // Elinde kilitlediği bir makine varsa serbest bırak
+            if (currentMachine != null) currentMachine.isOccupied = false;
+            
+            currentState = EmployeeState.Idle;
+            timer = 0f;
+            return;
+        }
+
         switch (currentState)
         {
             case EmployeeState.Idle:
@@ -79,7 +85,6 @@ public class EmployeeController : MonoBehaviour
                 break;
 
             case EmployeeState.MovingToCustomer:
-                // SİLİNEN KISIM BURASIYDI: Müşteriye git
                 MoveToTarget(assignedCustomer.transform.position, EmployeeState.TakingOrder);
                 break;
 
@@ -94,14 +99,9 @@ public class EmployeeController : MonoBehaviour
                     if (currentMachine != null)
                     {
                         currentMachine.isOccupied = true; // Makineyi rezerve et
-                        
-                        // DÜZELTME BURADA: Timer'ı SADECE makine bulursak sıfırlıyoruz!
-                        timer = 0f; 
-                        
+                        timer = 0f; // SADECE makine bulursak sıfırlıyoruz!
                         currentState = EmployeeState.MovingToMachine;
                     }
-                    // Eğer makine bulamazsa timer sıfırlanmaz! 
-                    // Yani siparişi çoktan aldığı için bir sonraki frame'de beklemeden tekrar makine sorar.
                 }
                 break;
 
@@ -121,7 +121,6 @@ public class EmployeeController : MonoBehaviour
                 break;
 
             case EmployeeState.MovingToDeliver:
-                // SİLİNEN KISIM 2: Kahveyi teslim et
                 MoveToTarget(assignedCustomer.transform.position, EmployeeState.Idle);
                 break;
         }
@@ -149,7 +148,7 @@ public class EmployeeController : MonoBehaviour
             {
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
                 CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
-                assignedCustomer = null; // İş bitti, müşteri referansını sil
+                assignedCustomer = null; 
                 timer = 0f;
                 currentState = nextState;
             }
