@@ -23,7 +23,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("Pitch (Ton) Ayarları")]
     [Tooltip("Aynı ses üst üste çalarken ne kadar rastgele incelip kalınlaşsın? (Örn: 0.1)")]
-    public float pitchRandomness = 0.15f; 
+    public float pitchRandomness = 0.05f; 
 
     void Awake()
     {
