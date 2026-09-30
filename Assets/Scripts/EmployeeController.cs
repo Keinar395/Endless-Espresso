@@ -113,7 +113,7 @@ public class EmployeeController : MonoBehaviour
                     }
                     
                     // BİTİŞ (Beep) SESİNİ ÇAL
-                    AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.brewDoneClip);
+                    AudioManager.Instance.PlaySFX(AudioManager.Instance.brewDoneClip);
                     
                     currentMachine = null;
                     currentState = EmployeeState.MovingToDeliver;
@@ -143,7 +143,7 @@ public class EmployeeController : MonoBehaviour
             if (distance < 2f)
             {
                 // TESLİMAT: PARA KAZANMA SESİ ÇAL
-                AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.moneyClip);
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.moneyClip);
                 
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
                 CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
@@ -157,7 +157,7 @@ public class EmployeeController : MonoBehaviour
             if (distance < 2f)
             {
                 // MÜŞTERİYE VARILDI: SİPARİŞ ALMA SESİ ÇAL
-                AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.takeOrderClip);
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.takeOrderClip);
                 
                 timer = 0f;
                 currentState = nextState;

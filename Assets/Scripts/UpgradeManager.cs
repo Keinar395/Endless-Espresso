@@ -187,3 +187,10 @@ public class UpgradeManager : MonoBehaviour
         UpdateUI();
     }
 }
+[System.Serializable]
+public struct ProductTier
+{
+    public string productName; 
+    public double basePrice;   
+    public double evolutionCost; 
+}
