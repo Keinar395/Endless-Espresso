@@ -34,7 +34,6 @@ public class EmployeeController : MonoBehaviour
 
     void Awake()
     {
-        // Başlangıçta hızları temele eşitliyoruz
         moveSpeed = baseMoveSpeed;
         orderTakeTime = baseOrderTime;
         brewTime = baseBrewTime;
@@ -45,27 +44,24 @@ public class EmployeeController : MonoBehaviour
         currentState = EmployeeState.Idle;
     }
 
-    // UpgradeManager tarafından hızlandırıldığımızda çağrılır
     public void UpdateWorkStats(float multiplier)
     {
         moveSpeed = baseMoveSpeed * multiplier;
-        
-        // GÜVENLİK SINIRI: Süreler ne kadar kısalırsa kısalsın 0.05 saniyenin altına düşmesin (Bug olmaması için)
         orderTakeTime = Mathf.Max(baseOrderTime / multiplier, 0.05f);
         brewTime = Mathf.Max(baseBrewTime / multiplier, 0.05f);
-        
-        // BONUS: Yürüme hızı arttıkça, dönüş (yönelme) hızı da artsın ki robot gibi donuk kalmasınlar
         rotationSpeed = 720f * multiplier; 
     }
 
     void Update()
     {
-        // GÜVENLİK: Eğer atanmış müşteri bir şekilde yok olursa (Sahneden silinirse vb.)
+        // GÜVENLİK (Müşteri kaybolursa)
         if (currentState != EmployeeState.Idle && assignedCustomer == null)
         {
-            // Elinde kilitlediği bir makine varsa serbest bırak
-            if (currentMachine != null) currentMachine.isOccupied = false;
-            
+            if (currentMachine != null) 
+            {
+                currentMachine.StopBrewing(); // SESİ KES
+                currentMachine.isOccupied = false;
+            }
             currentState = EmployeeState.Idle;
             timer = 0f;
             return;
@@ -75,11 +71,10 @@ public class EmployeeController : MonoBehaviour
         {
             case EmployeeState.Idle:
                 Customer potentialCustomer = CustomerManager.Instance.TryGetAvailableCustomer();
-    
                 if (potentialCustomer != null)
                 {
                     assignedCustomer = potentialCustomer;
-                    assignedCustomer.isBeingServed = true; // Hemen mühürle
+                    assignedCustomer.isBeingServed = true; 
                     currentState = EmployeeState.MovingToCustomer;
                 }
                 break;
@@ -90,16 +85,13 @@ public class EmployeeController : MonoBehaviour
 
             case EmployeeState.TakingOrder:
                 timer += Time.deltaTime;
-                // Sipariş alma süresi dolduysa
                 if (timer >= orderTakeTime)
                 {
-                    // Boş makine bulmaya çalış
                     currentMachine = UpgradeManager.Instance.GetAvailableMachine();
-                    
                     if (currentMachine != null)
                     {
-                        currentMachine.isOccupied = true; // Makineyi rezerve et
-                        timer = 0f; // SADECE makine bulursak sıfırlıyoruz!
+                        currentMachine.isOccupied = true; 
+                        timer = 0f; 
                         currentState = EmployeeState.MovingToMachine;
                     }
                 }
@@ -114,7 +106,15 @@ public class EmployeeController : MonoBehaviour
                 if (timer >= brewTime)
                 {
                     timer = 0f;
-                    if (currentMachine != null) currentMachine.isOccupied = false;
+                    if (currentMachine != null) 
+                    {
+                        currentMachine.StopBrewing(); // SESİ DURDUR (Kahve dökülmesi bitti)
+                        currentMachine.isOccupied = false;
+                    }
+                    
+                    // BİTİŞ (Beep) SESİNİ ÇAL
+                    AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.brewDoneClip);
+                    
                     currentMachine = null;
                     currentState = EmployeeState.MovingToDeliver;
                 }
@@ -128,7 +128,6 @@ public class EmployeeController : MonoBehaviour
 
     private void MoveToTarget(Vector3 target, EmployeeState nextState)
     {
-        // --- Rotasyon Mantığı ---
         Vector2 direction = target - transform.position;
         if (direction.sqrMagnitude > 0.001f)
         {
@@ -136,16 +135,16 @@ public class EmployeeController : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0, 0, angle - 90f), rotationSpeed * Time.deltaTime);
         }
 
-        // --- Hareket Mantığı ---
         transform.position = Vector2.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
-
-        // --- Mesafe ve Varış Kontrolleri ---
         float distance = Vector2.Distance(transform.position, target);
 
         if (currentState == EmployeeState.MovingToDeliver)
         {
             if (distance < 2f)
             {
+                // TESLİMAT: PARA KAZANMA SESİ ÇAL
+                AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.moneyClip);
+                
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
                 CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
                 assignedCustomer = null; 
@@ -157,6 +156,9 @@ public class EmployeeController : MonoBehaviour
         {
             if (distance < 2f)
             {
+                // MÜŞTERİYE VARILDI: SİPARİŞ ALMA SESİ ÇAL
+                AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.takeOrderClip);
+                
                 timer = 0f;
                 currentState = nextState;
             }
@@ -165,6 +167,9 @@ public class EmployeeController : MonoBehaviour
         {
             if (distance < 1f)
             {
+                // MAKİNEYE VARILDI: ÇALIŞMA (LOOP) SESİNİ BAŞLAT
+                currentMachine.StartBrewing(AudioManager.Instance.brewingLoopClip);
+                
                 timer = 0f;
                 currentState = nextState;
             }

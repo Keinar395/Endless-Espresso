@@ -22,16 +22,15 @@ public class UpgradeManager : MonoBehaviour
     public float moveSpeedCostMultiplier = 1.5f;
     public TextMeshProUGUI moveSpeedCostText;
     public float globalSpeedMultiplier = 1f; 
-    public float speedStep = 0.1f; // Her tıkta hızı %10 artırır
+    public float speedStep = 0.1f; 
 
-    [Header("Machine Upgrade (Yatay Genişleme)")]
-    public double machineCost = 30; // Makine alma bedeli
+    [Header("Machine Upgrade")]
+    public double machineCost = 30; 
     public float machineCostMultiplier = 1.8f;
     public TextMeshProUGUI machineCostText;
-    public GameObject machinePrefab; // Makinenin kendisi (Kare)
-   public List<Machine> activeMachines = new List<Machine>(); // Sahnede var olan tüm makineler
-    [Tooltip("Yeni makine eskisinin ne kadar uzağına yerleşecek?")]
-    public float machineSpacingOffset = 1f; // X ekseninde sağa doğru kayma miktarı
+    public GameObject machinePrefab; 
+    public List<Machine> activeMachines = new List<Machine>(); 
+    public float machineSpacingOffset = 1f; 
 
     [Header("Evolution (Dark Shift) System")]
     public int currentProductTier = 0; 
@@ -50,7 +49,7 @@ public class UpgradeManager : MonoBehaviour
         if (firstEmp != null)
         {
             activeEmployees.Add(firstEmp);
-            firstEmp.UpdateWorkStats(globalSpeedMultiplier); // DOĞRUSU BU
+            firstEmp.UpdateWorkStats(globalSpeedMultiplier); 
         }
 
         if (productTiers.Length > 0)
@@ -58,59 +57,62 @@ public class UpgradeManager : MonoBehaviour
             MoneyManager.Instance.coffeePrice = productTiers[0].basePrice;
         }
 
-        CustomerManager.Instance.UpdateCustomerFlow(globalSpeedMultiplier); 
-        
+        CustomerManager.Instance.UpdateCustomerFlow(globalSpeedMultiplier);
         UpdateUI();
     }
 
-    // --- YENİ EKLENEN MAKİNE SATIN ALMA FONKSİYONU ---
     public void BuyNewMachine()
     {
         if (MoneyManager.Instance.SpendMoney(machineCost))
         {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.upgradeClip); // BAŞARILI
+            
             Machine lastMachine = activeMachines[activeMachines.Count - 1];
             Vector3 newPosition = lastMachine.transform.position + new Vector3(machineSpacingOffset, 0, 0);
 
-            // Makineyi kopyala
             GameObject newMachine = Instantiate(machinePrefab, newPosition, Quaternion.identity);
-            
-            // KİLİT ÇÖZÜM NOKTASI BURASI:
             Machine machineScript = newMachine.GetComponent<Machine>();
-            
-            // Makine kimden kopyalanmış olursa olsun, hayata kesinlikle BOŞ başlasın!
             machineScript.isOccupied = false; 
             
             activeMachines.Add(machineScript);
 
             machineCost = System.Math.Round(machineCost * machineCostMultiplier);
             UpdateUI();
-
-            Debug.Log("Yeni makine alındı! Toplam makine: " + activeMachines.Count);
+        }
+        else 
+        {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); // HATA SESİ
         }
     }
 
-    // Çalışanların boş bir makine bulması için kullanılacak fonksiyon
     public Machine GetAvailableMachine()
-{
-    foreach (Machine m in activeMachines)
     {
-        if (!m.isOccupied) return m;
+        foreach (Machine m in activeMachines)
+        {
+            if (!m.isOccupied) return m;
+        }
+        return null; 
     }
-    return null; // Tüm makineler doluysa null döner
-}
 
-    // (Eski Fonksiyonlar Aynen Kalıyor)
     public void HireEmployee()
     {
         if (MoneyManager.Instance.SpendMoney(hireCost))
         {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.upgradeClip); // BAŞARILI
+
             GameObject newEmp = Instantiate(employeePrefab, employeeSpawnPoint.position, Quaternion.identity);
             EmployeeController empScript = newEmp.GetComponent<EmployeeController>();
-            // Yeni çalışan doğduğunda anında güncel hız çarpanını alsın
-            empScript.UpdateWorkStats(globalSpeedMultiplier); // DOĞRUSU BU
+            
+            empScript.UpdateWorkStats(globalSpeedMultiplier); 
+            empScript.currentState = EmployeeController.EmployeeState.Idle; 
+
             activeEmployees.Add(empScript);
             hireCost = System.Math.Round(hireCost * hireCostMultiplier);
             UpdateUI();
+        }
+        else 
+        {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); // HATA SESİ
         }
     }
 
@@ -118,6 +120,8 @@ public class UpgradeManager : MonoBehaviour
     {
         if (MoneyManager.Instance.SpendMoney(moveSpeedCost))
         {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.upgradeClip); // BAŞARILI
+
             globalSpeedMultiplier += speedStep;
 
             foreach (EmployeeController emp in activeEmployees)
@@ -125,11 +129,14 @@ public class UpgradeManager : MonoBehaviour
                 emp.UpdateWorkStats(globalSpeedMultiplier);
             }
             
-            // YENİ SATIR: Hız arttığında müşteri akışını da hızlandır
-            CustomerManager.Instance.UpdateCustomerFlow(globalSpeedMultiplier); 
+            CustomerManager.Instance.UpdateCustomerFlow(globalSpeedMultiplier);
 
             moveSpeedCost = System.Math.Round(moveSpeedCost * moveSpeedCostMultiplier);
             UpdateUI();
+        }
+        else 
+        {
+            AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); // HATA SESİ
         }
     }
 
@@ -140,10 +147,15 @@ public class UpgradeManager : MonoBehaviour
             double cost = productTiers[currentProductTier].evolutionCost;
             if (MoneyManager.Instance.SpendMoney(cost))
             {
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.evolveClip); // EVRİM SESİ
+
                 currentProductTier++; 
                 MoneyManager.Instance.coffeePrice = productTiers[currentProductTier].basePrice;
                 UpdateUI();
-                Debug.Log("DÜKKAN EVRİM GEÇİRDİ! Yeni Ürün: " + productTiers[currentProductTier].productName);
+            }
+            else 
+            {
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); // HATA SESİ
             }
         }
     }
@@ -152,7 +164,7 @@ public class UpgradeManager : MonoBehaviour
     {
         if (moveSpeedCostText != null) moveSpeedCostText.text ="Increase Speed:" + "$" + moveSpeedCost.ToString("F0");
         if (hireCostText != null) hireCostText.text ="Hire Employee:" + "$" + hireCost.ToString("F0");
-        if (machineCostText != null) machineCostText.text = "Buy Machine:" + "$" + machineCost.ToString("F0"); // Yeni eklendi
+        if (machineCostText != null) machineCostText.text = "Buy Machine:" + "$" + machineCost.ToString("F0"); 
 
         if (productTiers.Length > 0 && currentProductTier < productTiers.Length)
         {
@@ -174,12 +186,4 @@ public class UpgradeManager : MonoBehaviour
         MoneyManager.Instance.AddMoney(1000000f);
         UpdateUI();
     }
-}
-
-[System.Serializable]
-public struct ProductTier
-{
-    public string productName; 
-    public double basePrice;   
-    public double evolutionCost; 
 }
