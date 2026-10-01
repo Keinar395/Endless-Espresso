@@ -2512,55 +2512,55 @@ MonoBehaviour:
     isDarkShift: 0
   - productName: Ice Cream
     basePrice: 50
-    evolutionCost: 1000
+    evolutionCost: 1250
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Cake
     basePrice: 250
-    evolutionCost: 5000
+    evolutionCost: 7500
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Steak
     basePrice: 1250
-    evolutionCost: 25000
-    tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
+    evolutionCost: 40000
+    tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Caviar
     basePrice: 6250
-    evolutionCost: 125000
-    tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
+    evolutionCost: 200000
+    tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Tongue
     basePrice: 31250
-    evolutionCost: 625000
+    evolutionCost: 1000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Fingers
     basePrice: 156250
-    evolutionCost: 3125000
+    evolutionCost: 6500000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Intestine
     basePrice: 781250
-    evolutionCost: 15625000
+    evolutionCost: 40000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Eyes
     basePrice: 3906250
-    evolutionCost: 78125000
+    evolutionCost: 240000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Humans
     basePrice: 19531250
-    evolutionCost: 390625000
+    evolutionCost: 1440000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
