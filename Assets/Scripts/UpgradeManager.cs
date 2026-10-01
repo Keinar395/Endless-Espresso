@@ -218,9 +218,9 @@ public class UpgradeManager : MonoBehaviour
 
     private void UpdateUI()
     {
-        if (moveSpeedCostText != null) moveSpeedCostText.text ="Increase Speed: $" + NumberFormatter.Format(moveSpeedCost);
-        if (hireCostText != null) hireCostText.text ="Hire Employee: $" + NumberFormatter.Format(hireCost);
-        if (machineCostText != null) machineCostText.text = "Buy Machine: $" + NumberFormatter.Format(machineCost); 
+        if (moveSpeedCostText != null) moveSpeedCostText.text =" $" + NumberFormatter.Format(moveSpeedCost);
+        if (hireCostText != null) hireCostText.text =" $" + NumberFormatter.Format(hireCost);
+        if (machineCostText != null) machineCostText.text = " $" + NumberFormatter.Format(machineCost); 
 
         if (productTiers.Length > 0 && currentProductTier < productTiers.Length)
         {
