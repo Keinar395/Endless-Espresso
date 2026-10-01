@@ -12,26 +12,26 @@ public class CustomerManager : MonoBehaviour
     public Transform exitPoint;
 
     [Header("Spawning & Positioning")]
-    public float baseSpawnInterval = 3f; // Başlangıçtaki müşteri gelme süresi
-    private float currentSpawnInterval;  // O anki hızlandırılmış süre
+    public float baseSpawnInterval = 3f; 
+    private float currentSpawnInterval;  
     public int maxCustomers = 5;         
     public float randomOffsetRange = 10f; 
     
     [Header("Customer Speed (Müşteri Hızı)")]
-    public float baseCustomerSpeed = 4f; // Müşterinin başlangıç yürüme hızı
-    private float currentCustomerSpeed;  // Hız çarpanına göre artan yürüme hızı
+    public float baseCustomerSpeed = 4f; 
+    private float currentCustomerSpeed;  
 
     [Header("Floating Text Prefab")]
     public GameObject floatingTextPrefab;
 
     private float timer = 0f;
+    public bool isDarkShiftActive = false;
 
     public List<Customer> waitingCustomers = new List<Customer>();
 
     void Awake()
     {
         Instance = this;
-        // Oyun başlarken anlık değerleri temellere eşitle
         currentSpawnInterval = baseSpawnInterval;
         currentCustomerSpeed = baseCustomerSpeed;
     }
@@ -40,7 +40,6 @@ public class CustomerManager : MonoBehaviour
     {
         timer += Time.deltaTime;
         
-        // Yeterli süre geçtiyse ve dükkan tam dolu değilse
         if (timer >= currentSpawnInterval && waitingCustomers.Count < maxCustomers)
         {
             SpawnCustomer();
@@ -48,20 +47,11 @@ public class CustomerManager : MonoBehaviour
         }
     }
 
-    // UpgradeManager tarafından çağrılacak yeni fonksiyon!
     public void UpdateCustomerFlow(float globalMultiplier)
     {
-        // globalMultiplier oyun başında 1'dir.
-        // Hız arttıkça müşterilerin daha da "agresif" gelmesini istiyorsak, çarpanın gücünü artırabiliriz (Örn: 1.2 kuvvetini alarak)
-        // Böylece oyun başında çarpan 1 kalır (bozulmaz), ama sonlara doğru çok daha fazla müşteri üretir.
         float spawnMultiplier = Mathf.Pow(globalMultiplier, 2.5f); 
-
         currentSpawnInterval = baseSpawnInterval / spawnMultiplier;
-        
-        // KOD HATASININ ÇÖZÜMÜ: Alt sınır koyuyoruz. Müşteriler en fazla 0.15 saniyede bir gelebilsin (Oyun çökmesin diye)
         currentSpawnInterval = Mathf.Max(currentSpawnInterval, 0.15f);
-
-        // Müşteri yürüme hızı normal çarpanla artsın (Oyun başında 5 ile ÇARPMIYORUZ ki tazı gibi koşmasınlar)
         currentCustomerSpeed = baseCustomerSpeed * globalMultiplier;
     }
 
@@ -69,8 +59,13 @@ public class CustomerManager : MonoBehaviour
     {
         GameObject go = Instantiate(customerPrefab, spawnPoint.position, Quaternion.identity);
         Customer newCustomer = go.GetComponent<Customer>();
+
+        // HATA DÜZELTİLDİ: newCustomerScript yerine newCustomer kullanıldı
+        if (isDarkShiftActive)
+        {
+            newCustomer.EvolveToDarkShift();
+        }
         
-        // YENİ: Müşterinin yürüme hızını dinamik hıza eşitle
         newCustomer.speed = currentCustomerSpeed;
         
         Vector3 randomOffset = new Vector3(Random.Range(-randomOffsetRange, randomOffsetRange), 0, 0);
@@ -110,16 +105,23 @@ public class CustomerManager : MonoBehaviour
         }
     }
 
-    // Yazıyı doğuran fonksiyon
     public void SpawnFloatingText(Vector3 spawnPosition, string textValue)
     {
         if (floatingTextPrefab != null)
         {
-            // Müşterinin biraz üzerinden doğsun diye Y eksenine 1f ekliyoruz
             Vector3 offsetPosition = spawnPosition + new Vector3(0, 1f, 0);
             GameObject popup = Instantiate(floatingTextPrefab, offsetPosition, Quaternion.identity);
-            
             popup.GetComponent<FloatingText>().Setup(textValue);
+        }
+    }
+
+    public void ActivateDarkShift()
+    {
+        isDarkShiftActive = true;
+        Customer[] allActiveCustomers = Object.FindObjectsByType<Customer>(FindObjectsSortMode.None);
+        foreach (Customer c in allActiveCustomers)
+        {
+            c.EvolveToDarkShift();
         }
     }
 }

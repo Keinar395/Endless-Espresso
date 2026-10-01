@@ -30,6 +30,11 @@ public class EmployeeController : MonoBehaviour
     private Customer assignedCustomer;
     private Machine currentMachine;
 
+    [Header("Görseller")]
+    public Sprite normalSprite;
+    public Sprite darkSprite;
+    private SpriteRenderer spriteRenderer;
+
     private float timer = 0f;
 
     void Awake()
@@ -42,6 +47,7 @@ public class EmployeeController : MonoBehaviour
     void Start()
     {
         currentState = EmployeeState.Idle;
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public void UpdateWorkStats(float multiplier)
@@ -52,14 +58,27 @@ public class EmployeeController : MonoBehaviour
         rotationSpeed = 720f * multiplier; 
     }
 
+    public void EvolveToDarkShift()
+    {
+        // YENİ: Eğer Start() fonksiyonu henüz yetişemediyse ve spriteRenderer boşsa, hemen şimdi bul!
+        if (spriteRenderer == null) 
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        if (darkSprite != null && spriteRenderer != null)
+        {
+            spriteRenderer.sprite = darkSprite;
+        }
+    }
+
     void Update()
     {
-        // GÜVENLİK (Müşteri kaybolursa)
         if (currentState != EmployeeState.Idle && assignedCustomer == null)
         {
             if (currentMachine != null) 
             {
-                currentMachine.StopBrewing(); // SESİ KES
+                currentMachine.StopBrewing(); 
                 currentMachine.isOccupied = false;
             }
             currentState = EmployeeState.Idle;
@@ -108,11 +127,10 @@ public class EmployeeController : MonoBehaviour
                     timer = 0f;
                     if (currentMachine != null) 
                     {
-                        currentMachine.StopBrewing(); // SESİ DURDUR (Kahve dökülmesi bitti)
+                        currentMachine.StopBrewing(); 
                         currentMachine.isOccupied = false;
                     }
                     
-                    // BİTİŞ (Beep) SESİNİ ÇAL
                     AudioManager.Instance.PlaySFX(AudioManager.Instance.brewDoneClip);
                     
                     currentMachine = null;
@@ -142,14 +160,11 @@ public class EmployeeController : MonoBehaviour
         {
             if (distance < 2f)
             {
-                // 1. SESİ ÇAL
                 AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.moneyClip);
                 
-                // 2. YÜZEN YAZIYI OLUŞTUR (Formatlayarak)
                 string formattedMoney = NumberFormatter.Format(MoneyManager.Instance.coffeePrice);
                 CustomerManager.Instance.SpawnFloatingText(assignedCustomer.transform.position, formattedMoney);
                 
-                // 3. PARAYI KASAYA EKLE
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
                 CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
                 assignedCustomer = null; 
@@ -161,9 +176,7 @@ public class EmployeeController : MonoBehaviour
         {
             if (distance < 2f)
             {
-                // MÜŞTERİYE VARILDI: SİPARİŞ ALMA SESİ ÇAL
                 AudioManager.Instance.PlaySFX(AudioManager.Instance.takeOrderClip);
-                
                 timer = 0f;
                 currentState = nextState;
             }
@@ -172,9 +185,7 @@ public class EmployeeController : MonoBehaviour
         {
             if (distance < 1f)
             {
-                // MAKİNEYE VARILDI: ÇALIŞMA (LOOP) SESİNİ BAŞLAT
                 currentMachine.StartBrewing(AudioManager.Instance.brewingLoopClip);
-                
                 timer = 0f;
                 currentState = nextState;
             }

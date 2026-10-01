@@ -5,11 +5,22 @@ public class Customer : MonoBehaviour
     public Vector3 targetPosition; 
     public float speed = 4f;
     public bool isAtCounter = false;
+
+    [Header("Görseller")]
+    public Sprite normalSprite;
+    public Sprite darkSprite;
+    private SpriteRenderer spriteRenderer;
     
     // YENİ EKLENEN DEĞİŞKEN: Başka bir çalışan bu müşteriyi aldı mı?
     public bool isBeingServed = false; 
     
     private bool isGoingToExit = false;
+
+    void Start()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
     void Update()
     {
         // Hedef koordinata yürü
@@ -26,6 +37,20 @@ public class Customer : MonoBehaviour
             {
                 Destroy(gameObject); // Çıkışa ulaştıysa yok ol
             }
+        }
+    }
+
+    public void EvolveToDarkShift()
+    {
+        // YENİ: Eğer Start() fonksiyonu henüz yetişemediyse ve spriteRenderer boşsa, hemen şimdi bul!
+        if (spriteRenderer == null) 
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        if (darkSprite != null && spriteRenderer != null)
+        {
+            spriteRenderer.sprite = darkSprite;
         }
     }
 
