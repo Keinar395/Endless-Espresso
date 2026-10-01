@@ -142,9 +142,14 @@ public class EmployeeController : MonoBehaviour
         {
             if (distance < 2f)
             {
-                // TESLİMAT: PARA KAZANMA SESİ ÇAL
-                AudioManager.Instance.PlaySFX(AudioManager.Instance.moneyClip);
+                // 1. SESİ ÇAL
+                AudioManager.Instance.PlaySFXRandomPitch(AudioManager.Instance.moneyClip);
                 
+                // 2. YÜZEN YAZIYI OLUŞTUR (Formatlayarak)
+                string formattedMoney = NumberFormatter.Format(MoneyManager.Instance.coffeePrice);
+                CustomerManager.Instance.SpawnFloatingText(assignedCustomer.transform.position, formattedMoney);
+                
+                // 3. PARAYI KASAYA EKLE
                 MoneyManager.Instance.AddMoney(MoneyManager.Instance.coffeePrice);
                 CustomerManager.Instance.ServeSpecificCustomer(assignedCustomer);
                 assignedCustomer = null; 

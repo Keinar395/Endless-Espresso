@@ -21,6 +21,9 @@ public class CustomerManager : MonoBehaviour
     public float baseCustomerSpeed = 4f; // Müşterinin başlangıç yürüme hızı
     private float currentCustomerSpeed;  // Hız çarpanına göre artan yürüme hızı
 
+    [Header("Floating Text Prefab")]
+    public GameObject floatingTextPrefab;
+
     private float timer = 0f;
 
     public List<Customer> waitingCustomers = new List<Customer>();
@@ -51,7 +54,7 @@ public class CustomerManager : MonoBehaviour
         // globalMultiplier oyun başında 1'dir.
         // Hız arttıkça müşterilerin daha da "agresif" gelmesini istiyorsak, çarpanın gücünü artırabiliriz (Örn: 1.2 kuvvetini alarak)
         // Böylece oyun başında çarpan 1 kalır (bozulmaz), ama sonlara doğru çok daha fazla müşteri üretir.
-        float spawnMultiplier = Mathf.Pow(globalMultiplier, 2f); 
+        float spawnMultiplier = Mathf.Pow(globalMultiplier, 2.5f); 
 
         currentSpawnInterval = baseSpawnInterval / spawnMultiplier;
         
@@ -104,6 +107,19 @@ public class CustomerManager : MonoBehaviour
         {
             customerToServe.GoToExit(exitPoint);
             waitingCustomers.Remove(customerToServe);
+        }
+    }
+
+    // Yazıyı doğuran fonksiyon
+    public void SpawnFloatingText(Vector3 spawnPosition, string textValue)
+    {
+        if (floatingTextPrefab != null)
+        {
+            // Müşterinin biraz üzerinden doğsun diye Y eksenine 1f ekliyoruz
+            Vector3 offsetPosition = spawnPosition + new Vector3(0, 1f, 0);
+            GameObject popup = Instantiate(floatingTextPrefab, offsetPosition, Quaternion.identity);
+            
+            popup.GetComponent<FloatingText>().Setup(textValue);
         }
     }
 }

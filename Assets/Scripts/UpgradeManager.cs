@@ -162,9 +162,15 @@ public class UpgradeManager : MonoBehaviour
 
     private void UpdateUI()
     {
-        if (moveSpeedCostText != null) moveSpeedCostText.text ="Increase Speed:" + "$" + moveSpeedCost.ToString("F0");
-        if (hireCostText != null) hireCostText.text ="Hire Employee:" + "$" + hireCost.ToString("F0");
-        if (machineCostText != null) machineCostText.text = "Buy Machine:" + "$" + machineCost.ToString("F0"); 
+        // Eski .ToString("F0") yerine NumberFormatter.Format() kullanıyoruz
+        if (moveSpeedCostText != null) 
+            moveSpeedCostText.text ="Increase Speed: $" + NumberFormatter.Format(moveSpeedCost);
+            
+        if (hireCostText != null) 
+            hireCostText.text ="Hire Employee: $" + NumberFormatter.Format(hireCost);
+            
+        if (machineCostText != null) 
+            machineCostText.text = "Buy Machine: $" + NumberFormatter.Format(machineCost); 
 
         if (productTiers.Length > 0 && currentProductTier < productTiers.Length)
         {
@@ -176,7 +182,7 @@ public class UpgradeManager : MonoBehaviour
                 if (currentProductTier >= productTiers.Length - 1)
                     evolutionCostText.text = "MAX";
                 else
-                    evolutionCostText.text = "$" + productTiers[currentProductTier].evolutionCost.ToString("F0");
+                    evolutionCostText.text = "$" + NumberFormatter.Format(productTiers[currentProductTier].evolutionCost);
             }
         }
     }

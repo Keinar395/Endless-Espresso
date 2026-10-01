@@ -58,7 +58,7 @@ public class MoneyManager : MonoBehaviour
         {
             // Şimdilik sadece tam sayı olarak yazdırıyoruz (F0). 
             // İleride buraya 1K, 1M, 1B gibi kısaltma formatları ekleyeceğiz.
-            moneyText.text = "$" + currentMoney.ToString("F0"); 
+            moneyText.text = "$" + NumberFormatter.Format(currentMoney);
         }
     }
 }
