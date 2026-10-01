@@ -2494,7 +2494,7 @@ MonoBehaviour:
   globalSpeedMultiplier: 1
   speedStep: 0.1
   machineCost: 50
-  machineCostMultiplier: 1.8
+  machineCostMultiplier: 4
   machineCostText: {fileID: 1853706921}
   machinePrefab: {fileID: 748562318}
   activeMachines:

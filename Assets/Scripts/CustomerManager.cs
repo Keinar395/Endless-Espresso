@@ -49,7 +49,7 @@ public class CustomerManager : MonoBehaviour
 
     public void UpdateCustomerFlow(float globalMultiplier)
     {
-        float spawnMultiplier = Mathf.Pow(globalMultiplier, 2.5f); 
+        float spawnMultiplier = Mathf.Pow(globalMultiplier, 3f); 
         currentSpawnInterval = baseSpawnInterval / spawnMultiplier;
         currentSpawnInterval = Mathf.Max(currentSpawnInterval, 0.15f);
         currentCustomerSpeed = baseCustomerSpeed * globalMultiplier;
