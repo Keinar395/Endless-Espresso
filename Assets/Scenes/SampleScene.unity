@@ -2536,31 +2536,31 @@ MonoBehaviour:
     isDarkShift: 0
   - productName: Tongue
     basePrice: 30000
-    evolutionCost: 15000000
+    evolutionCost: 7500000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Fingers
     basePrice: 150000
-    evolutionCost: 80000000
+    evolutionCost: 40000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Intestine
     basePrice: 700000
-    evolutionCost: 450000000
+    evolutionCost: 225000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Eyes
     basePrice: 4000000
-    evolutionCost: 2500000000
+    evolutionCost: 1250000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Humans
     basePrice: 20000000
-    evolutionCost: 15000000000
+    evolutionCost: 7500000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
     customEvolveSound: {fileID: 0}
     isDarkShift: 1
