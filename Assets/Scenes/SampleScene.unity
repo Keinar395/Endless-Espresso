@@ -2764,7 +2764,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.2
+  m_Volume: 0.1
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -2871,7 +2871,7 @@ MonoBehaviour:
   brewDoneClip: {fileID: 8300000, guid: 2c5df924ea63dd595976d3c9c2723390, type: 3}
   moneyClip: {fileID: 8300000, guid: 0714ac46b97e1acd684ee7c2ac0fc1c9, type: 3}
   musicSource: {fileID: 1901801416}
-  darkShiftMusic: {fileID: 8300000, guid: 48b44e3862690df439a97576bd420d23, type: 3}
+  darkShiftMusic: {fileID: 8300000, guid: e61f9c3979423685a88ad338a82b8703, type: 3}
   pitchRandomness: 0.05
 --- !u!1 &1965519739
 GameObject:
