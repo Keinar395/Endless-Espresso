@@ -10,9 +10,9 @@ public struct ProductTier
     public double basePrice;   
     public double evolutionCost; 
     
-    [Header("Görsel & Ses Ayarları")]
+    [Header("Görsel Ayarları")]
     public Sprite tierBackgroundSprite; 
-    public AudioClip customEvolveSound; 
+    // customEvolveSound buradan tamamen silindi!
     
     [Header("Dark Shift")]
     public bool isDarkShift; 
@@ -93,9 +93,11 @@ public class UpgradeManager : MonoBehaviour
                 currentProductTier++; 
                 MoneyManager.Instance.coffeePrice = productTiers[currentProductTier].basePrice;
                 
-                AudioClip tierSound = productTiers[currentProductTier].customEvolveSound;
-                if (tierSound != null) AudioManager.Instance.PlaySFX(tierSound);
-                else AudioManager.Instance.PlaySFX(AudioManager.Instance.evolveClip); 
+                // Artık özel ses yok, sadece standart evrim efekti çalacak
+                if(AudioManager.Instance != null) 
+                {
+                    AudioManager.Instance.PlaySFX(AudioManager.Instance.evolveClip); 
+                }
 
                 StartCoroutine(CameraShake(0.5f, 0.2f));
 
@@ -113,7 +115,8 @@ public class UpgradeManager : MonoBehaviour
             }
             else 
             {
-                AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); 
+                if(AudioManager.Instance != null) 
+                    AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); 
             }
         }
     }
@@ -140,6 +143,12 @@ public class UpgradeManager : MonoBehaviour
     private void TriggerDarkShift()
     {
         isDarkShiftActive = true;
+        
+        // YENİ: Dark Shift başladığında müziği değiştir!
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SwitchToDarkShiftMusic();
+        }
         
         foreach (Machine m in activeMachines) m.EvolveToDarkShift();
         foreach (EmployeeController emp in activeEmployees) emp.EvolveToDarkShift();
@@ -216,11 +225,17 @@ public class UpgradeManager : MonoBehaviour
         else AudioManager.Instance.PlaySFX(AudioManager.Instance.cannotBuyClip); 
     }
 
+    public void CheatAddMoney()
+    {
+        MoneyManager.Instance.AddMoney(1000000f);
+        UpdateUI();
+    }
+
     private void UpdateUI()
     {
-        if (moveSpeedCostText != null) moveSpeedCostText.text =" $" + NumberFormatter.Format(moveSpeedCost);
-        if (hireCostText != null) hireCostText.text =" $" + NumberFormatter.Format(hireCost);
-        if (machineCostText != null) machineCostText.text = " $" + NumberFormatter.Format(machineCost); 
+        if (moveSpeedCostText != null) moveSpeedCostText.text ="Increase Speed: $" + NumberFormatter.Format(moveSpeedCost);
+        if (hireCostText != null) hireCostText.text ="Hire Employee: $" + NumberFormatter.Format(hireCost);
+        if (machineCostText != null) machineCostText.text = "Buy Machine: $" + NumberFormatter.Format(machineCost); 
 
         if (productTiers.Length > 0 && currentProductTier < productTiers.Length)
         {
@@ -233,12 +248,4 @@ public class UpgradeManager : MonoBehaviour
             }
         }
     }
-
-    public void CheatAddMoney()
-    {
-        MoneyManager.Instance.AddMoney(1000000f);
-        UpdateUI();
-    }
-
-    
 }

@@ -2508,61 +2508,51 @@ MonoBehaviour:
     basePrice: 10
     evolutionCost: 200
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Ice Cream
     basePrice: 50
     evolutionCost: 1250
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Cake
     basePrice: 250
     evolutionCost: 7500
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Steak
     basePrice: 1250
     evolutionCost: 45000
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Caviar
     basePrice: 6250
     evolutionCost: 250000
     tierBackgroundSprite: {fileID: 709236210494246168, guid: d59b2efe818350af38830a1807a3191f, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 0
   - productName: Tongue
     basePrice: 30000
     evolutionCost: 7500000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Fingers
     basePrice: 150000
     evolutionCost: 40000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Intestine
     basePrice: 700000
     evolutionCost: 225000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Eyes
     basePrice: 4000000
     evolutionCost: 1250000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 1
   - productName: Humans
     basePrice: 20000000
     evolutionCost: 7500000000
     tierBackgroundSprite: {fileID: -649284944238035112, guid: e4d534b06c16558dfa837b8537bcd802, type: 3}
-    customEvolveSound: {fileID: 0}
     isDarkShift: 1
   mainCamera: {fileID: 519420031}
   backgroundRenderer: {fileID: 1082355586}
@@ -2872,7 +2862,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   sfxSource: {fileID: 1901801417}
   loopSource: {fileID: 1901801415}
-  musicSource: {fileID: 1901801416}
   clickClip: {fileID: 8300000, guid: c4e4740f713b6b6dc92fa606a260968c, type: 3}
   cannotBuyClip: {fileID: 8300000, guid: a6132cc2fad649f71963f9bce55b67d0, type: 3}
   upgradeClip: {fileID: 8300000, guid: d02deb5b25aeaa9cdbf3edebdc5644e2, type: 3}
@@ -2881,7 +2870,9 @@ MonoBehaviour:
   brewingLoopClip: {fileID: 8300000, guid: 54406920b012bd16eb7c41650c3ccc6d, type: 3}
   brewDoneClip: {fileID: 8300000, guid: 2c5df924ea63dd595976d3c9c2723390, type: 3}
   moneyClip: {fileID: 8300000, guid: 0714ac46b97e1acd684ee7c2ac0fc1c9, type: 3}
-  pitchRandomness: 0.15
+  musicSource: {fileID: 1901801416}
+  darkShiftMusic: {fileID: 0}
+  pitchRandomness: 0.05
 --- !u!1 &1965519739
 GameObject:
   m_ObjectHideFlags: 0
